@@ -26,11 +26,21 @@ export default {
 				foreground: 'hsl(var(--foreground))',
 				primary: {
 					DEFAULT: 'hsl(var(--primary))',
-					foreground: 'hsl(var(--primary-foreground))'
+					foreground: 'hsl(var(--primary-foreground))',
+					glow: 'hsl(var(--primary-glow))'
 				},
 				secondary: {
 					DEFAULT: 'hsl(var(--secondary))',
 					foreground: 'hsl(var(--secondary-foreground))'
+				},
+				/* BurnMate Custom Colors */
+				burn: {
+					primary: 'hsl(var(--burn-primary))',
+					secondary: 'hsl(var(--burn-secondary))'
+				},
+				achievement: 'hsl(var(--achievement))',
+				mood: {
+					calm: 'hsl(var(--mood-calm))'
 				},
 				destructive: {
 					DEFAULT: 'hsl(var(--destructive))',
@@ -68,6 +78,16 @@ export default {
 				md: 'calc(var(--radius) - 2px)',
 				sm: 'calc(var(--radius) - 4px)'
 			},
+			backgroundImage: {
+				'gradient-burn': 'var(--gradient-burn)',
+				'gradient-achievement': 'var(--gradient-achievement)',
+				'gradient-card': 'var(--gradient-card)'
+			},
+			boxShadow: {
+				'burn': 'var(--shadow-burn)',
+				'card': 'var(--shadow-card)',
+				'hover': 'var(--shadow-hover)'
+			},
 			keyframes: {
 				'accordion-down': {
 					from: {
@@ -88,7 +108,11 @@ export default {
 			},
 			animation: {
 				'accordion-down': 'accordion-down 0.2s ease-out',
-				'accordion-up': 'accordion-up 0.2s ease-out'
+				'accordion-up': 'accordion-up 0.2s ease-out',
+				'bounce-subtle': 'bounce 2s infinite',
+				'pulse-slow': 'pulse 3s infinite',
+				'fade-in': 'fadeIn 0.5s ease-out',
+				'slide-up': 'slideUp 0.3s ease-out'
 			}
 		}
 	},
