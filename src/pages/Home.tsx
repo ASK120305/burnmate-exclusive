@@ -1,13 +1,18 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
+import { Button } from '@/components/ui/button';
 import DailyDashboard from '@/components/DailyDashboard';
 import ActivityTracker from '@/components/ActivityTracker';
 import FoodSwap from '@/components/FoodSwap';
 import MoodSuggestor from '@/components/MoodSuggestor';
 import { useBurn } from '@/context/BurnContext';
+import { useAuth } from '@/context/AuthContext';
 import { motion } from 'framer-motion';
+import { ExternalLink } from 'lucide-react';
 
 const Home = () => {
   const { dailyTotal } = useBurn();
+  const { user } = useAuth();
 
   return (
     <div className="min-h-screen bg-background">
@@ -24,10 +29,19 @@ const Home = () => {
               BurnMate
             </span>{' '}
             🔥
+            {user && <span className="block text-2xl mt-2">Hi there, {user.name}!</span>}
           </h1>
-          <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+          <p className="text-lg text-muted-foreground max-w-2xl mx-auto mb-6">
             Track calories burned through everyday activities and discover fun ways to stay active!
           </p>
+          
+          {/* Landing Page Button */}
+          <Link to="/">
+            <Button variant="outline" className="hover:bg-accent">
+              <ExternalLink className="mr-2 h-4 w-4" />
+              View Landing Page
+            </Button>
+          </Link>
         </motion.div>
 
         {/* Daily Dashboard */}
