@@ -14,6 +14,15 @@ const authRequired = (req, res, next) => {
   }
 };
 
+const requireSameUser = (paramKey = 'id') => (req, res, next) => {
+  if (!req.user) return res.status(401).json({ message: 'Unauthorized' });
+  const requestedId = req.params[paramKey];
+  if (requestedId !== req.user.id) {
+    return res.status(403).json({ message: 'Forbidden' });
+  }
+  next();
+};
+
 export { authRequired, requireSameUser };
 
 
