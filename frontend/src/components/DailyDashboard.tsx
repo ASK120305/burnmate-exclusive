@@ -1,11 +1,13 @@
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Flame, Target, TrendingUp, Award } from 'lucide-react';
+import { Flame, Target, TrendingUp, Award, User } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useBurn } from '@/context/BurnContext';
+import { useAuth } from '@/context/AuthContext';
 
 const DailyDashboard = () => {
   const { dailyTotal, streak, activities } = useBurn();
+  const { user } = useAuth();
 
   const todayActivities = activities.filter(
     activity => activity.timestamp.toDateString() === new Date().toDateString()
@@ -37,6 +39,34 @@ const DailyDashboard = () => {
       textColor: 'text-foreground'
     }
   ];
+
+  // Show login prompt if no user is logged in
+  if (!user) {
+    return (
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="md:col-span-3"
+        >
+          <Card className="bg-gradient-card shadow-card border-0">
+            <CardContent className="p-8">
+              <div className="text-center">
+                <User className="h-16 w-16 mx-auto text-muted-foreground mb-4" />
+                <h3 className="text-xl font-semibold mb-2">Welcome to Burn Buddy Blitz!</h3>
+                <p className="text-muted-foreground mb-4">
+                  Log in to start tracking your fitness journey and see your daily stats.
+                </p>
+                <div className="text-sm text-muted-foreground">
+                  Track activities, monitor calories burned, and build your fire streak!
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </motion.div>
+      </div>
+    );
+  }
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">

@@ -4,20 +4,31 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Plus, Clock } from 'lucide-react';
+import { Plus, Clock, User } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { ACTIVITY_DATA } from '@/data/activities';
 import { useBurn } from '@/context/BurnContext';
+import { useAuth } from '@/context/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 
 const ActivityTracker = () => {
   const [selectedActivity, setSelectedActivity] = useState('');
   const [duration, setDuration] = useState('');
   const { addActivity } = useBurn();
+  const { user } = useAuth();
   const { toast } = useToast();
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    
+    if (!user) {
+      toast({
+        title: "Authentication Required",
+        description: "Please log in to track activities.",
+        variant: "destructive",
+      });
+      return;
+    }
     
     if (!selectedActivity || !duration) {
       toast({
@@ -50,6 +61,31 @@ const ActivityTracker = () => {
   const estimatedCalories = selectedActivityData && duration 
     ? Math.round(selectedActivityData.caloriesPerMinute * parseInt(duration))
     : 0;
+
+  // Show login prompt if no user is logged in
+  if (!user) {
+    return (
+      <Card className="bg-gradient-card shadow-card border-0">
+        <CardHeader>
+          <CardTitle className="flex items-center space-x-2">
+            <div className="p-2 bg-gradient-burn rounded-lg">
+              <User className="h-5 w-5 text-white" />
+            </div>
+            <span>Track Activity</span>
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="text-center py-8">
+            <User className="h-16 w-16 mx-auto text-muted-foreground mb-4" />
+            <h3 className="text-lg font-semibold mb-2">Login Required</h3>
+            <p className="text-muted-foreground mb-4">
+              Please log in to start tracking your activities and calories burned.
+            </p>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
 
   return (
     <Card className="bg-gradient-card shadow-card border-0">

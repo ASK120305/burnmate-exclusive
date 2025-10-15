@@ -1,25 +1,42 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Trophy, Medal, Crown, Plus, Users } from 'lucide-react';
+import { Trophy, Medal, Crown, Plus, Users, User, Calendar, Zap, Activity } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useBurn } from '@/context/BurnContext';
+import { useAuth } from '@/context/AuthContext';
 import { ACTIVITY_DATA } from '@/data/activities';
 import { useToast } from '@/hooks/use-toast';
+import { leaderboardApi, GlobalLeaderboardEntry } from '@/services/api';
 
 const LeaderboardPage = () => {
   const [name, setName] = useState('');
   const [selectedActivity, setSelectedActivity] = useState('');
   const [duration, setDuration] = useState('');
   const { leaderboard, addToLeaderboard } = useBurn();
+  const [globalLeaderboard, setGlobalLeaderboard] = useState<GlobalLeaderboardEntry[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [selectedUser, setSelectedUser] = useState<GlobalLeaderboardEntry | null>(null);
+  const [selectedUserWorkouts, setSelectedUserWorkouts] = useState<ReturnType<typeof Array.prototype.slice>>([] as any);
+  const [loadingUser, setLoadingUser] = useState(false);
+  const { user } = useAuth();
   const { toast } = useToast();
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    
+    if (!user) {
+      toast({
+        title: "Authentication Required",
+        description: "Please log in to add entries to the leaderboard.",
+        variant: "destructive",
+      });
+      return;
+    }
     
     if (!name || !selectedActivity || !duration) {
       toast({
@@ -86,6 +103,88 @@ const LeaderboardPage = () => {
         return 'bg-gradient-card text-foreground';
     }
   };
+
+  const fetchGlobal = async () => {
+    setLoading(true);
+    try {
+      const data = await leaderboardApi.getGlobal();
+      setGlobalLeaderboard(data);
+    } catch (e) {
+      console.error('Failed to load global leaderboard:', e);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchGlobal();
+    const onUpdated = () => fetchGlobal();
+    window.addEventListener('burn:workout-updated', onUpdated);
+    return () => window.removeEventListener('burn:workout-updated', onUpdated);
+  }, []);
+
+  const openUserDetails = async (entry: GlobalLeaderboardEntry) => {
+    setSelectedUser(entry);
+    setLoadingUser(true);
+    try {
+      const workouts = await leaderboardApi.getUserWorkouts(entry.userId);
+      setSelectedUserWorkouts(workouts);
+    } catch (e) {
+      console.error('Failed to load user workouts:', e);
+    } finally {
+      setLoadingUser(false);
+    }
+  };
+
+  const closeUserDetails = () => {
+    setSelectedUser(null);
+    setSelectedUserWorkouts([]);
+  };
+
+  // Show login prompt if no user is logged in
+  if (!user) {
+    return (
+      <div className="min-h-screen bg-background">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <motion.div
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="text-center mb-8"
+          >
+            <h1 className="text-3xl font-bold mb-4">
+              <Trophy className="inline h-8 w-8 mr-2 text-yellow-500" />
+              Burn Leaderboard
+            </h1>
+            <p className="text-lg text-muted-foreground">
+              Compete with friends and see who's burning the most calories!
+            </p>
+          </motion.div>
+
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.1 }}
+            className="max-w-md mx-auto"
+          >
+            <Card className="bg-gradient-card shadow-card border-0">
+              <CardContent className="p-8">
+                <div className="text-center">
+                  <User className="h-16 w-16 mx-auto text-muted-foreground mb-4" />
+                  <h3 className="text-xl font-semibold mb-2">Login Required</h3>
+                  <p className="text-muted-foreground mb-4">
+                    Please log in to view the leaderboard and add your own entries.
+                  </p>
+                  <div className="text-sm text-muted-foreground">
+                    Join the competition and see how you rank!
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </motion.div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background">
@@ -181,32 +280,33 @@ const LeaderboardPage = () => {
               <CardHeader>
                 <CardTitle className="flex items-center space-x-2">
                   <Users className="h-5 w-5" />
-                  <span>Top Burners</span>
+                  <span>Global Top Burners</span>
                   <Badge className="bg-gradient-burn text-white border-0">
-                    {leaderboard.length} entries
+                    {globalLeaderboard.length} users
                   </Badge>
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                {leaderboard.length === 0 ? (
+                {loading ? (
+                  <div className="text-center py-12 text-muted-foreground">Loading leaderboard...</div>
+                ) : globalLeaderboard.length === 0 ? (
                   <div className="text-center py-12">
                     <Trophy className="h-16 w-16 mx-auto mb-4 text-muted-foreground opacity-50" />
-                    <h3 className="text-lg font-semibold mb-2">No entries yet!</h3>
-                    <p className="text-muted-foreground">
-                      Be the first to add your calorie burn to the leaderboard.
-                    </p>
+                    <h3 className="text-lg font-semibold mb-2">No data yet!</h3>
+                    <p className="text-muted-foreground">Start adding workouts to climb the ranks.</p>
                   </div>
                 ) : (
                   <div className="space-y-3">
                     <AnimatePresence>
-                      {leaderboard.map((entry, index) => (
+                      {globalLeaderboard.map((entry, index) => (
                         <motion.div
-                          key={entry.id}
+                          key={entry.userId}
                           initial={{ opacity: 0, x: -20 }}
                           animate={{ opacity: 1, x: 0 }}
                           exit={{ opacity: 0, x: 20 }}
-                          transition={{ delay: index * 0.05 }}
-                          className={`rounded-lg p-4 shadow-sm border ${getRankColors(index)}`}
+                          transition={{ delay: index * 0.02 }}
+                          className={`rounded-lg p-4 shadow-sm border cursor-pointer ${getRankColors(index)}`}
+                          onClick={() => openUserDetails(entry)}
                         >
                           <div className="flex items-center justify-between">
                             <div className="flex items-center space-x-3">
@@ -216,18 +316,11 @@ const LeaderboardPage = () => {
                               </div>
                               <div>
                                 <h4 className="font-semibold">{entry.name}</h4>
-                                <p className="text-sm opacity-75">{entry.activity}</p>
-                                {entry.funCaption && (
-                                  <p className="text-xs italic opacity-60 mt-1">
-                                    {entry.funCaption}
-                                  </p>
-                                )}
+                                <p className="text-sm opacity-75">{entry.workoutsCount} workouts</p>
                               </div>
                             </div>
                             <div className="text-right">
-                              <div className="text-2xl font-bold">
-                                {entry.calories}
-                              </div>
+                              <div className="text-2xl font-bold">{entry.totalCalories}</div>
                               <div className="text-xs opacity-75">calories</div>
                             </div>
                           </div>
@@ -241,6 +334,45 @@ const LeaderboardPage = () => {
           </div>
         </div>
       </div>
+
+      {/* User Details Modal */}
+      {selectedUser && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" onClick={closeUserDetails}>
+          <div className="w-full max-w-2xl bg-background rounded-lg shadow-xl" onClick={(e) => e.stopPropagation()}>
+            <div className="p-4 border-b flex items-center justify-between">
+              <div className="font-semibold">{selectedUser.name}'s recent workouts</div>
+              <Button variant="ghost" onClick={closeUserDetails}>Close</Button>
+            </div>
+            <div className="p-4">
+              {loadingUser ? (
+                <div className="text-center text-muted-foreground py-6">Loading...</div>
+              ) : selectedUserWorkouts.length === 0 ? (
+                <div className="text-center text-muted-foreground py-6">No workouts available</div>
+              ) : (
+                <div className="space-y-3">
+                  {selectedUserWorkouts.map((w: any, i: number) => (
+                    <div key={i} className="flex items-center justify-between p-3 border rounded-lg bg-card">
+                      <div className="flex items-center space-x-3">
+                        <div className="p-2 bg-orange-100 rounded-full">
+                          <Activity className="h-4 w-4 text-orange-600" />
+                        </div>
+                        <div>
+                          <div className="font-medium">{w.type}</div>
+                          <div className="text-xs text-muted-foreground flex items-center space-x-3">
+                            <span className="flex items-center space-x-1"><Calendar className="h-3 w-3" /><span>{w.date ? new Date(w.date).toLocaleString() : ''}</span></span>
+                            <span className="flex items-center space-x-1"><Zap className="h-3 w-3" /><span>{w.caloriesBurned} cal</span></span>
+                          </div>
+                        </div>
+                      </div>
+                      <div className="text-sm text-muted-foreground">{w.duration} min</div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

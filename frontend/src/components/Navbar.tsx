@@ -4,14 +4,18 @@ import { Home, Activity, Trophy, History, Flame, LogOut, User } from 'lucide-rea
 import { Button } from '@/components/ui/button';
 import { motion } from 'framer-motion';
 import { useAuth } from '@/context/AuthContext';
+import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 
 const Navbar = () => {
   const location = useLocation();
-  const { user, logout } = useAuth();
+  const { user, logoutUser } = useAuth();
+  const initials = user?.name ? user.name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2) : 'U';
 
   const navItems = [
+    { path: '/', icon: Flame, label: 'Home' },
     { path: '/dashboard', icon: Home, label: 'Dashboard' },
     { path: '/activities', icon: Activity, label: 'Activities' },
+    { path: '/calories', icon: Flame, label: 'Calories' },
     { path: '/leaderboard', icon: Trophy, label: 'Leaderboard' },
     { path: '/history', icon: History, label: 'History' },
   ];
@@ -76,12 +80,22 @@ const Navbar = () => {
             {/* User Menu */}
             {user ? (
               <div className="flex items-center space-x-2 ml-4">
-                <div className="hidden sm:flex items-center space-x-2 text-sm">
-                  <User className="h-4 w-4" />
-                  <span>Hi, {user.name}!</span>
-                </div>
+                <Link
+                  to="/profile"
+                  className={`flex items-center space-x-2 px-3 py-2 rounded-lg transition-all duration-200 ${
+                    location.pathname === '/profile'
+                      ? 'bg-gradient-burn text-white shadow-burn'
+                      : 'text-muted-foreground hover:text-foreground hover:bg-accent'
+                  }`}
+                >
+                  <Avatar className="h-8 w-8">
+                    <AvatarImage src={user?.avatarUrl} alt={user?.name || 'Profile'} />
+                    <AvatarFallback>{initials}</AvatarFallback>
+                  </Avatar>
+                  <span className="hidden sm:block text-sm font-medium">Profile</span>
+                </Link>
                 <Button
-                  onClick={logout}
+                  onClick={logoutUser}
                   variant="outline"
                   size="sm"
                   className="hover:bg-destructive hover:text-destructive-foreground"

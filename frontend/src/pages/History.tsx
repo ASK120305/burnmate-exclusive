@@ -2,13 +2,15 @@ import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Calendar, Trash2, Clock, Flame, TrendingUp } from 'lucide-react';
+import { Calendar, Trash2, Clock, Flame, TrendingUp, User } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useBurn } from '@/context/BurnContext';
+import { useAuth } from '@/context/AuthContext';
 import { format, startOfWeek, endOfWeek, eachDayOfInterval, isSameDay } from 'date-fns';
 
 const History = () => {
   const { activities } = useBurn();
+  const { user } = useAuth();
   const [selectedPeriod, setSelectedPeriod] = useState<'week' | 'all'>('week');
 
   // Group activities by date
@@ -42,6 +44,51 @@ const History = () => {
   // Calculate average daily calories
   const activeDays = filteredActivities.length;
   const averageDaily = activeDays > 0 ? Math.round(totalCalories / activeDays) : 0;
+
+  // Show login prompt if no user is logged in
+  if (!user) {
+    return (
+      <div className="min-h-screen bg-background">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <motion.div
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="text-center mb-8"
+          >
+            <h1 className="text-3xl font-bold mb-4">
+              <Calendar className="inline h-8 w-8 mr-2" />
+              Burn History
+            </h1>
+            <p className="text-lg text-muted-foreground">
+              Track your progress and see your calorie burning journey!
+            </p>
+          </motion.div>
+
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.1 }}
+            className="max-w-md mx-auto"
+          >
+            <Card className="bg-gradient-card shadow-card border-0">
+              <CardContent className="p-8">
+                <div className="text-center">
+                  <User className="h-16 w-16 mx-auto text-muted-foreground mb-4" />
+                  <h3 className="text-xl font-semibold mb-2">Login Required</h3>
+                  <p className="text-muted-foreground mb-4">
+                    Please log in to view your activity history and track your progress.
+                  </p>
+                  <div className="text-sm text-muted-foreground">
+                    Your personal fitness journey awaits!
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </motion.div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background">
