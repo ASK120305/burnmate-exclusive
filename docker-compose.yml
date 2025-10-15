@@ -1,0 +1,40 @@
+version: '3.8'
+
+services:
+  # Backend API
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: burnmate-backend
+    restart: always
+    ports:
+      - "5050:5050"
+    environment:
+      - NODE_ENV=production
+      - PORT=5050
+      - MONGO_URI=mongodb+srv://burnMateUser:aryankale%40123@cluster0.p4piucc.mongodb.net/burnmate?retryWrites=true&w=majority&appName=Cluster0
+      - JWT_SECRET=burnmate_super_secret_key_2025_production
+    networks:
+      - burnmate-network
+    volumes:
+      - ./backend:/app
+      - /app/node_modules
+
+  # Frontend
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: burnmate-frontend
+    restart: always
+    ports:
+      - "8080:80"
+    depends_on:
+      - backend
+    networks:
+      - burnmate-network
+
+networks:
+  burnmate-network:
+    driver: bridge
