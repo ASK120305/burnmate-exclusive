@@ -1,9 +1,13 @@
 import axios from 'axios';
 
-export const apiBaseURL = '/api';
+// Use the Render backend URL in production, proxy in development
+export const apiBaseURL = import.meta.env.PROD 
+  ? 'https://burnmate-exclusive.onrender.com/api'
+  : '/api';
 
 export const api = axios.create({
   baseURL: apiBaseURL,
+  withCredentials: true,
 });
 
 api.interceptors.request.use((config) => {

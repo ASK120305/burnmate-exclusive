@@ -10,7 +10,7 @@ export default defineConfig(({ mode }) => ({
     port: 8080,
     proxy: {
       '/api': {
-        target: 'https://burnmate-exclusive.onrender.com',
+        target: 'http://localhost:5050',
         changeOrigin: true,
       },
     },
